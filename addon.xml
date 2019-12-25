@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.aa.emasti" name="Emasti Viewer" version="0.0.6" provider-name="Abdullah Atta">
+	<requires>
+		<import addon="xbmc.python" version="2.24.0"/>
+		<import addon="script.module.routing" version="0.2.0"/>
+		<import addon="script.module.simplejson" version="3.3.0"/>
+		<import addon="script.module.parsedom" version="0.9.1"/>
+		<import addon="script.module.simple.downloader" version="1.9.5"/>
+	</requires>
+	<extension point="xbmc.python.pluginsource" library="main.py">
+		<provides>video</provides>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary lang="en_GB">Allows subscriber of DreamNet broadband to watch videos and do live streaming of content available at emasti.pk</summary>
+		<description lang="en_GB"></description>
+		<language></language>
+		<platform>all</platform>
+		<license>GPL-3.0</license>
+		<forum></forum>
+		<website></website>
+		<email>abdullahatta@gmail.com</email>
+		<source></source>
+		<news></news>
+		<disclaimer></disclaimer>
+		<assets>
+			<icon>resources/logo.png</icon>
+		</assets>
+	</extension>
+</addon>

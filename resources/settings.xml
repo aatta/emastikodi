@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<setting id="debug" type="bool" label="32001" default="true"/>
+	<category label="32003">
+		<setting label="32004" type="number" id="yt_qual" default="320"/>
+		<setting label="32002" type="text" id="down_folder" default="/storage/videos/"/>
+	</category>
+</settings>
+
