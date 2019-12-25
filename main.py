@@ -7,6 +7,7 @@ common.dbglevel = 3 # Default
 common.USERAGENT = u"Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1"
 
 EMASTI_BASE_URL = "http://www.emasti.pk/"
+DMASTI_BASE_URL = "http://dmasti.pk/"
 thisPlugin = int(sys.argv[1])
 addonPath = xbmcaddon.Addon().getAddonInfo("path")
 
@@ -117,7 +118,9 @@ def getHomePageMenuArray():
                 {"name": "3D Movies", "link": "http://www.emasti.pk/movies/index/0?Cat=3d-movies"},
                 {"name": "English Movies", "link": "http://www.emasti.pk/movies/index/0?Cat=english-movies"},
                 {"name": "Indian Dub Movies", "link": "http://www.emasti.pk/movies/index/0?Cat=indiandub-movies"},
-                {"name": "Pakistani Movies", "link": "http://www.emasti.pk/movies/index/0?Cat=pakistani-movies"}
+                {"name": "Pakistani Movies", "link": "http://www.emasti.pk/movies/index/0?Cat=pakistani-movies"},
+                {"name": "South Indian Movies", "link": "http://www.dmasti.pk/movies?Cat=indiandub-movies"},
+                {"name": "Punjabi Movies", "link": "http://www.dmasti.pk/movies?Cat=punjabi-movies"}
                 ]
         },
         {
@@ -255,9 +258,10 @@ def getSubmenu(myparams):
         
 def performSearch(myparams):
     search = common.getUserInput("Artist", "")
-    link = "http://www.emasti.pk/search/index/0?keyword=" + search
-    
-    getPageVideos({"mi": "Search", "link": link})
+    if search != None:
+        link = "http://www.emasti.pk/search/index/0?keyword=" + str(search)
+        
+        getPageVideos({"mi": "Search", "link": link})
     
 def getPageVideos(myparams):
     mi = myparams["mi"]
@@ -297,15 +301,19 @@ def getPageVideos(myparams):
         
 def getWebtvPage():
     global thisPlugin
-    data = file_downloader.fetchPage(EMASTI_BASE_URL + "webtv")
+    data = file_downloader.fetchPage(DMASTI_BASE_URL + "webtv")
     
     if data["status"] == 200:
         html = data["content"].encode('utf-8')
-        divCats = common.parseDOM(html, "div", attrs = { "class": "channelFilter clearfix" })
-        cats = common.parseDOM(divCats, "a")
+        cats = common.parseDOM(html, "a", attrs = { "class": "channel nav-link" }, ret = True)
         listParams = []
         for cat in cats:
-            listParams.append({"cat": cat, "name": cat})
+            name = common.parseDOM(cat, "a", attrs = { }, ret = False)
+            link = common.parseDOM(cat, "a", attrs = { }, ret = "data-value")
+
+            name = common.makeAscii(name)
+            link = common.makeAscii(link)
+            listParams.append({"webTvLink": link, "name": name})
         
         addListing(listParams)
     else:
@@ -354,23 +362,30 @@ def listWebtvChannels(myparams):
 
     return None
 def showVideo(params):
-    data = file_downloader.fetchPage(params['video'])
-    if data["status"] == 200:
-        html = data["content"].encode('utf-8')
-        
-        divPlayer = common.parseDOM(html, "div", attrs = { "id": "playerDM" })
-        clickHandler = common.makeAscii(common.parseDOM(divPlayer, "img", ret = "onclick"))
-        indexFirstApostrophe = clickHandler.find("'")
-        indexSecondApostrophe = clickHandler.find("'", indexFirstApostrophe + 1)
-        link = clickHandler[indexFirstApostrophe + 1:indexSecondApostrophe]
-        
+    link = params['webTvLink']
+
+    if link == None:
+        data = file_downloader.fetchPage(params['video'])
+        if data["status"] == 200:
+            html = data["content"].encode('utf-8')
+            
+            divPlayer = common.parseDOM(html, "div", attrs = { "id": "playerDM" })
+            clickHandler = common.makeAscii(common.parseDOM(divPlayer, "img", ret = "onclick"))
+            indexFirstApostrophe = clickHandler.find("'")
+            indexSecondApostrophe = clickHandler.find("'", indexFirstApostrophe + 1)
+            link = clickHandler[indexFirstApostrophe + 1:indexSecondApostrophe]
+
+    if link == None:
+        xbmcgui.Dialog().ok("Emasti Viewer", "Failed to play requested stream.")
+    else:
         common.log(link)
         
         item = xbmcgui.ListItem(params['name'], '', '', path=link)
-        item.setThumbnailImage(params['thumb'])
+        if 'thumb' in params:
+            item.setThumbnailImage(params['thumb'])
+
         xbmc.Player().play(item=link, listitem=item)
-    else:
-        xbmcgui.Dialog().ok("Emasti Viewer", "Failed to play requested stream.")
+    
 
 def getIntMonth(strMonth):
     if strMonth == "January":
@@ -476,5 +491,5 @@ elif 'cat' in myparams:
     listWebtvChannels(myparams)
 elif 'videoPageUrl' in myparams:
     file_downloader.findAndPlayVideo(myparams)
-elif 'video' in myparams:
+elif 'video' in myparams or 'webTvLink' in myparams:
     showVideo(myparams)
